@@ -15,7 +15,7 @@ import projectojogoarpao.jogo.arpao.bd.BDTpontuacoes;
  * @author francisco
  */
 public class Teste {
-    
+    //
     public static void testaPainel(JPanel painel){
         
     }
