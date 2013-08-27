@@ -27,7 +27,8 @@ import projectojogoarpao.jogo.fisica.movimentos.MovimentoGravitico;
  * 
  * @author francisco
  */
-public class Personagem implements Movivel, ControlavelPorTeclado, Rectangulo, Colidivel{
+public class Personagem implements Movivel, ControlavelPorTeclado, Rectangulo,
+		Colidivel {
 
 	private static final int VELOCIDADE = 3;
 	private BufferedImage bi;
@@ -136,10 +137,10 @@ public class Personagem implements Movivel, ControlavelPorTeclado, Rectangulo, C
 			}
 			if (keyCode == KeyEvent.VK_UP) {
 				if (!emSalto) {
-					emSalto = true;
-					inicioSalto = true;
-					mg.setVy(-30);
-				}
+						emSalto = true;
+						inicioSalto = true;
+						mg.setVy(-30);
+				} 
 			}
 		}
 	}
@@ -239,7 +240,6 @@ public class Personagem implements Movivel, ControlavelPorTeclado, Rectangulo, C
 		this.movivel = movivel;
 	}
 
-
 	@Override
 	public int getX() {
 		return mg.getX();
@@ -248,6 +248,10 @@ public class Personagem implements Movivel, ControlavelPorTeclado, Rectangulo, C
 	@Override
 	public int getY() {
 		return mg.getY();
+	}
+
+	public void setEmSalto(boolean emSalto) {
+		this.emSalto = emSalto;
 	}
 
 }

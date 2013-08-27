@@ -36,7 +36,9 @@ public class BDTniveis extends BDJogoArpao {
             dadosNivel.num = nivel;
             dadosNivel.fundo = rs.getString("fundo");
             dadosNivel.xPersonagem = rs.getInt("xpersonagem");
+            dadosNivel.yPersonagem = rs.getInt("ypersonagem");
             dadosNivel.bolas = getBolas(dadosNivel.num);
+            dadosNivel.estrelas = getEstrelas(dadosNivel.num);
             ps.close();
             ligacao.commit();
         } catch (SQLException ex) {
@@ -63,10 +65,6 @@ public class BDTniveis extends BDJogoArpao {
                 bola.vy = rs.getInt("vy");
                 bolas.add(bola);
             }
-            if (bolas.isEmpty()) {
-                throw new ExcepcaoSemBolas("Não foi possível carregar o nivel"
-                        + " por não ter bolas");
-            }
             ps.close();
             return bolas;
         } catch (SQLException ex) {
@@ -74,6 +72,30 @@ public class BDTniveis extends BDJogoArpao {
         }
     }
 
+    public ArrayList<DadosEstrela> getEstrelas(int nivel) {
+        try {
+            ArrayList<DadosEstrela> estrelas = null;
+            PreparedStatement ps = ligacao.prepareStatement(
+                    "select tamanho,nivel,x,y from estrelas "
+                    + "where nivel = ?");
+            ps.setInt(1, nivel);
+            ResultSet rs = ps.executeQuery();
+            estrelas = new ArrayList<DadosEstrela>();
+            while (rs.next()) {
+                DadosEstrela estrela = new DadosEstrela();
+                estrela.tamanho= rs.getInt("tamanho");
+                estrela.x = rs.getInt("x");
+                estrela.y = rs.getInt("y");
+                estrelas.add(estrela);
+            }
+            ps.close();
+            return estrelas;
+        } catch (SQLException ex) {
+            throw new ExcecaoSQL(ex);
+        }
+    }
+
+    
     public void criaNivel(DadosNivel dadosNivel) {
         PreparedStatement ps = null;
         try {
@@ -83,15 +105,19 @@ public class BDTniveis extends BDJogoArpao {
                         + " porque não tem bolas");
             }
             ps = ligacao.prepareStatement("insert or replace into "
-                    + "niveis (\"nivel\", \"fundo\", \"xpersonagem\")"
-                    + " values (?, ?, ?);");
+                    + "niveis (\"nivel\", \"fundo\", \"xpersonagem\",\"ypersonagem\")"
+                    + " values (?, ?, ?, ?);");
             ps.setInt(1, dadosNivel.num);
             ps.setString(2, dadosNivel.fundo);
             ps.setInt(3, dadosNivel.xPersonagem);
+            ps.setInt(4, dadosNivel.yPersonagem);
             ps.execute();
 
             ps = ligacao.prepareStatement("delete from bolas where \"nivel\"=?");
+            ps.setInt(1, dadosNivel.num);
+            ps.execute();
 
+            ps = ligacao.prepareStatement("delete from estrelas where \"nivel\"=?");
             ps.setInt(1, dadosNivel.num);
             ps.execute();
 
@@ -108,6 +134,19 @@ public class BDTniveis extends BDJogoArpao {
                 ps.setFloat(6, dadosBola.vy);
                 ps.execute();
             }
+            
+            for (int i = 0; i < dadosNivel.estrelas.size(); i++) {
+                DadosEstrela dadosEstrela = dadosNivel.estrelas.get(i);
+                ps = ligacao.prepareStatement("insert into estrelas "
+                        + "(\"tamanho\", \"nivel\", \"x\", \"y\") "
+                        + "values (?, ?, ?, ?);");
+                ps.setInt(1, dadosEstrela.tamanho);
+                ps.setInt(2, dadosNivel.num);
+                ps.setInt(3, dadosEstrela.x);
+                ps.setInt(4, dadosEstrela.y);
+                ps.execute();
+            }            
+            
             ligacao.commit();
             ps.close();
         } catch (SQLException ex) {

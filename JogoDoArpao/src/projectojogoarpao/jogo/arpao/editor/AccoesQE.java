@@ -8,6 +8,7 @@ public interface AccoesQE {
 
     public String getFundo();
     TipoBola getTipoBola();
+    int getTamanho();
     TipoAccao getAccaoActual();
     void setAutorizacaoRemocao(boolean autorizacao);
 }

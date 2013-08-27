@@ -1,13 +1,16 @@
 package projectojogoarpao.jogo.fisica;
 
+import java.io.ObjectInputStream.GetField;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import projectojogoarpao.invPrimarios.Dupla;
 import projectojogoarpao.jogo.arpao.Arpao;
+import projectojogoarpao.jogo.arpao.Obstaculo;
+import projectojogoarpao.jogo.arpao.bolas.BolaQJ;
 import testes.Debugger;
 
-public class GestorIntercepcoes<T extends Circulo>{
+public class GestorIntercepcoes<T extends Circulo> {
 	/**
 	 * @author Francisco Posições da colisão do primeiro objecto em relação ao
 	 *         segundo
@@ -16,11 +19,10 @@ public class GestorIntercepcoes<T extends Circulo>{
 		semColisao, emBaixo, emCima, aEsquerda, aDireida
 	}
 
-	
 	private LinkedList<T> circulos;
 	private LinkedList<? extends Rectangulo> rectangulos;
 	private Iterator<T> iterador = null;
-	
+
 	public Circulo circuloInterceptado = null;
 	public Rectangulo rectanguloInterceptado = null;
 	public PosicaoColisao posicacoColisao;
@@ -69,7 +71,7 @@ public class GestorIntercepcoes<T extends Circulo>{
 		Iterator<T> ic = circulos.descendingIterator();
 		while (ic.hasNext()) {
 			T circulo = ic.next();
-			
+
 			if (pontoDentro(circulo, x, y)) {
 				return circulo;
 			}
@@ -80,7 +82,7 @@ public class GestorIntercepcoes<T extends Circulo>{
 	public LinkedList<T> interceptados(Rectangulo rectangulo) {
 		LinkedList<T> interceptados = new LinkedList<T>();
 		for (T circulo : circulos) {
-			if (estaDentroDe(circulo,rectangulo)) {
+			if (estaDentroDe(circulo, rectangulo)) {
 				interceptados.add(circulo);
 			}
 		}
@@ -107,7 +109,7 @@ public class GestorIntercepcoes<T extends Circulo>{
 	public void setRectangulos(LinkedList<? extends Rectangulo> obstaculos) {
 		this.rectangulos = obstaculos;
 	}
-	
+
 	public static boolean estaDentroDe(Circulo circulo, Rectangulo rectangulo) {
 
 		if (circulo.getX() < rectangulo.getX()) {
@@ -127,50 +129,58 @@ public class GestorIntercepcoes<T extends Circulo>{
 		return true;
 	}
 
-	public static boolean pontoDentro(Circulo circulo, int px, int py) {
-		int cR = circulo.getDiametro() / 2;
-		int cX = circulo.getX();
-		int cX2 = cX + circulo.getDiametro();
-		int cY = circulo.getY();
-		int cY2 = cY + circulo.getDiametro();
-
-		// verifica se está dentro do pseudo quadrado que envolve o cirulo
-		if (px > cX && px < cX2 && py > cY && py < cY2) {
-			int xr, yr = 0;
-			// verifica se o ponto pertence ao 2º quadrante
-			if (px < cX + cR && py < cY + cR) {
-				xr = cX2 - px + cX;
-				yr = py;
-				// verifica se o ponto pertence ao 3º quadrante
-			} else if (px < cX + cR && py > cY + cR) {
-				xr = cX2 - px + cX;
-				yr = cY2 - py + cY;
-				// verifica se o ponto pertence ao 4º quadrante
-			} else if (px > cX + cR && py > cY + cR) {
-				xr = px;
-				yr = cY2 - py + cY;
-				// verifica se o ponto pertence ao 1º quadrante
-			} else {
-				xr = px;
-				yr = py;
-			}
-			int h2 = cR * cR;
-			int y2 = cY + cR - yr;
-			y2 *= y2;
-			double xcirc;
-			xcirc = cX + cR + Math.sqrt(h2 - y2);
-
-			if (xcirc >= xr) {
-				return true;
-			} else {
-				return false;
-			}
+	public static boolean pontoDentro(Rectangulo rectangulo, int px, int py) {
+		if (px<rectangulo.getX()) {
+			return false;
 		}
-		return false;
+		if (py<rectangulo.getY()) {
+			return false;
+		}
+		if (px>rectangulo.getX()+rectangulo.getLargura()) {
+			return false;
+		}
+		if (py>rectangulo.getY()+rectangulo.getAltura()) {
+			return false;
+		}
+		return true;
+	}
+	
+	public static boolean pontoDentro(Circulo circulo, int px, int py) {
+		float raio = circulo.getDiametro() / 2;
+		float cmx = circulo.getX() + raio;
+		float cmy = circulo.getY() + raio;
+		float dx = px - cmx;
+		float dy = py - cmy;
+		dx *= dx;
+		dy *= dy;
+		return Math.sqrt(dx + dy) <= raio;
 
+		/*
+		 * int cR = circulo.getDiametro() / 2; int cX = circulo.getX(); int cX2
+		 * = cX + circulo.getDiametro(); int cY = circulo.getY(); int cY2 = cY +
+		 * circulo.getDiametro();
+		 * 
+		 * // verifica se está dentro do pseudo quadrado que envolve o cirulo if
+		 * (px > cX && px < cX2 && py > cY && py < cY2) { int xr, yr = 0; //
+		 * verifica se o ponto pertence ao 2º quadrante if (px < cX + cR && py <
+		 * cY + cR) { xr = cX2 - px + cX; yr = py; // verifica se o ponto
+		 * pertence ao 3º quadrante } else if (px < cX + cR && py > cY + cR) {
+		 * xr = cX2 - px + cX; yr = cY2 - py + cY; // verifica se o ponto
+		 * pertence ao 4º quadrante } else if (px > cX + cR && py > cY + cR) {
+		 * xr = px; yr = cY2 - py + cY; // verifica se o ponto pertence ao 1º
+		 * quadrante } else { xr = px; yr = py; } int h2 = cR * cR; int y2 = cY
+		 * + cR - yr; y2 *= y2; double xcirc; xcirc = cX + cR + Math.sqrt(h2 -
+		 * y2);
+		 * 
+		 * if (xcirc >= xr) { return true; } else { return false; }
+		 * 
+		 * }
+		 */
+		// return false;
 	}
 
-	public static void atualizaColisao(Rectangulo rectangulo,Rectangulo rectangulo2){
+	public static void atualizaColisao(Rectangulo rectangulo,
+			Rectangulo rectangulo2) {
 		Colisao colisao = rectangulo.getColisao();
 		int r1x = rectangulo.getX();
 		int r2x = rectangulo2.getX();
@@ -193,16 +203,15 @@ public class GestorIntercepcoes<T extends Circulo>{
 		} else if (r1y2 > r2y2) {
 			colisao.topo = true;
 			// colisao tipo 4
-		}else
+		} else
 			colisao.direita = true;
-		Debugger.get().printf("colisao e:%s\n",colisao.esquerda);
-		Debugger.get().printf("colisao d:%s\n",colisao.direita);
-		Debugger.get().printf("colisao t:%s\n",colisao.topo);
-		Debugger.get().printf("colisao b:%s\n",colisao.base);
+		Debugger.get().printf("colisao e:%s\n", colisao.esquerda);
+		Debugger.get().printf("colisao d:%s\n", colisao.direita);
+		Debugger.get().printf("colisao t:%s\n", colisao.topo);
+		Debugger.get().printf("colisao b:%s\n", colisao.base);
 	}
-	
-	public static void atualizaColisao(
-			Circulo circulo,Rectangulo rectangulo) {
+
+	public static void atualizaColisao(Circulo circulo, Rectangulo rectangulo) {
 		int rX = rectangulo.getX();
 		int rX2 = rX + rectangulo.getLargura();
 		int rY = rectangulo.getY();
@@ -214,6 +223,9 @@ public class GestorIntercepcoes<T extends Circulo>{
 		int cY = circulo.getY();
 		int cYM = cY + cR;
 		int cY2 = cY + circulo.getDiametro();
+
+		// Debugger.get().printf("cy:"+cY+"ry:"+rY+"\n");
+
 		if (rectangulo instanceof Arpao) {
 			Arpao arpao = (Arpao) rectangulo;
 			rX = arpao.getX();
@@ -223,41 +235,39 @@ public class GestorIntercepcoes<T extends Circulo>{
 		}
 
 		Colisao colisao = circulo.getColisao();
-		if (rX > cX2 || rX2 < cX || rY > cY2 || rY2 < cY) {
+		if (cX2 < rX || rX2 < cX || cY2 < rY || rY2 < cY) {
 			return;
 		}
-		if (Dupla.cria(rX, rX2).estaEntre(cXM) && rY < cY) {
-			colisao.base = true;
-			// colisao tipo 2
-		} else if (Dupla.cria(rY, rY2).estaEntre(cYM) && rX2 > cX2) {
+
+		// colisao tipo 1
+		if (Dupla.cria(rY, rY2).estaEntre(cYM)
+				&& Dupla.cria(rX, rX2).estaEntre(cX)) {
 			colisao.direita = true;
+		}
+		// colisao tipo 2
+		else if (Dupla.cria(rX, rX2).estaEntre(cXM)
+				&& Dupla.cria(rY, rY2).estaEntre(cY2)) {
+			colisao.base = true;
 			// colisao tipo 3
-		} else if (Dupla.cria(rX, rX2).estaEntre(cXM) && rY2 > cY2) {
+		} else if (Dupla.cria(rX, rX2).estaEntre(cXM)
+				&& Dupla.cria(rY, rY2).estaEntre(cY)) {
 			colisao.topo = true;
 			// colisao tipo 4
-		} else if (Dupla.cria(rY, rY2).estaEntre(cYM) && rX < cX) {
+		} else if (Dupla.cria(rY, rY2).estaEntre(cYM)
+				&& Dupla.cria(rX, rX2).estaEntre(cX2)) {
 			colisao.esquerda = true;
 			// colisao tipo 5
-		} else if (cXM > rX2 && cYM > rY2) {
-			if (pontoDentro(circulo,rX2, rY2)) {
-				colisao.base = true;
-			}
+		} else if (pontoDentro(circulo, rX2, rY2)) {
+			colisao.topo = true;
 			// colisao tipo 6
-		} else if (cXM < rX && cYM > rY2) {
-			if(pontoDentro(circulo,rX, rY2)){
-				colisao.base = true;				
-			}
+		} else if (pontoDentro(circulo, rX, rY2)) {
+			colisao.topo = true;
 			// colisao tipo 7
-		} else if (cXM > rX2 && cYM < rY) {
-			if(pontoDentro(circulo,rX2, rY)){
-				colisao.topo = true;
-			}
+		} else if (pontoDentro(circulo, rX2, rY)) {
+			colisao.base = true;
 			// colisao tipo 8
-		} else if (cXM < rX && cYM < rY) {
-			if(pontoDentro(circulo,rX, rY)){
-				colisao.topo=true;
-			}
+		} else if (pontoDentro(circulo, rX, rY)) {
+			colisao.base = true;
 		}
 	}
-
 }

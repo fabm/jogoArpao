@@ -5,13 +5,9 @@
 package projectojogoarpao.jogo.fisica;
 
 /**
- *
+ * 
  * @author francisco
  */
-public interface Circulo extends Colidivel{
-public int getDiametro();
-
-int getX();
-
-int getY();
+public interface Circulo extends Colidivel {
+	public int getDiametro();
 }

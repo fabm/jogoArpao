@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -27,14 +28,15 @@ import projectojogoarpao.jogo.TXTPaintComSobra;
 import projectojogoarpao.jogo.arpao.bd.BDTniveis;
 import projectojogoarpao.jogo.arpao.bd.BDTpontuacoes;
 import projectojogoarpao.jogo.arpao.bd.DadosBola;
+import projectojogoarpao.jogo.arpao.bd.DadosEstrela;
 import projectojogoarpao.jogo.arpao.bd.DadosNivel;
 import projectojogoarpao.jogo.arpao.bolas.BolaQJ;
 import projectojogoarpao.jogo.arpao.bolas.TipoBola;
+import projectojogoarpao.jogo.arpao.estrelas.Estrela;
 import projectojogoarpao.jogo.fisica.Circulo;
 import projectojogoarpao.jogo.fisica.Colisao;
 import projectojogoarpao.jogo.fisica.GestorIntercepcoes;
 import projectojogoarpao.jogo.fisica.movimentos.MovimentoGravitico;
-import testes.Debugger;
 
 /**
  * 
@@ -42,28 +44,28 @@ import testes.Debugger;
  */
 public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 
-	private LinkedList<Pintavel> pintaveis = null;
-	private LinkedList<ControlavelPorTeclado> controlaveisPorTeclado = null;
-	private Arpao arpao;
-	private Fundo fundo;
-	private Personagem personagem;
-	private Dimension enquadramento;
-	private TXTPaint txtVidas;
-	private TXTPaint txtTempoNivel;
-	private TXTPaint txtPontos;
-	private Inteiro tempoNivel;
-	private TXTInicioNivel indicadorNivel;
-	private Booleano emMov;
-	private Inteiro vidas;
-	private int numNivel;
-	private LinkedList<BolaQJ> bolas;
-	private Booleano continuarAnimacao;
-	private Timer temporizador = null;
-	private int pontos;
-	private TXTPaint pausa = null;
-	private final MovimentoGravitico mg;
-	private final LinkedList<Obstaculo> obstaculos;
-	private final Estrela estrela;
+	protected LinkedList<Pintavel> pintaveis = null;
+	protected LinkedList<ControlavelPorTeclado> controlaveisPorTeclado = null;
+	protected Arpao arpao;
+	protected Fundo fundo;
+	protected Personagem personagem;
+	protected Dimension enquadramento;
+	protected TXTPaint txtVidas;
+	protected TXTPaint txtPontos;
+	protected Inteiro tempoNivel;
+	protected TXTInicioNivel indicadorNivel;
+	protected Booleano emMov;
+	protected Inteiro vidas;
+	protected int numNivel;
+	protected LinkedList<BolaQJ> bolas;
+	protected LinkedList<Estrela> estrelas;
+	protected Booleano continuarAnimacao;
+	protected Timer temporizador = null;
+	protected int pontos;
+	protected TXTPaint pausa = null;
+	protected final MovimentoGravitico mg;
+	protected final LinkedList<Obstaculo> obstaculos;
+	protected Ampulheta ampulheta;
 
 	public JogoArpao() {
 		continuarAnimacao = new Booleano(true);
@@ -78,22 +80,21 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 		tempoNivel = new Inteiro(0);
 		pontos = 0;
 
-		estrela = new Estrela();
-		
+		ampulheta = new Ampulheta();
+
 		personagem = new Personagem();
 		personagem.setMg(mg);
 		personagem.setMovivel(emMov);
 
 		arpao = new Arpao(emMov);
 		arpao.setMG(mg);
-		
-		
 
 		bolas = new LinkedList<BolaQJ>();
+		estrelas = new LinkedList<>();
 
 		obstaculos = new LinkedList<Obstaculo>();
 
-		obstaculos.add(new Obstaculo(200, 20, 100, 400));
+		obstaculos.add(Obstaculo.padrao());
 
 		txtVidas = new TXTPaint(criaFonte(Font.PLAIN, 18),
 				new CadeiaCaracteres() {
@@ -102,18 +103,8 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 					}
 				});
 		txtVidas.setX(10);
-		txtVidas.setY(20);
+		txtVidas.setY(30);
 		txtVidas.setVisivel(true);
-
-		txtTempoNivel = new TXTPaint(criaFonte(Font.PLAIN, 15),
-				new CadeiaCaracteres() {
-					public String getCadeia() {
-						return "Tempo:" + tempoNivel.getValor();
-					}
-				});
-		txtTempoNivel.setX(700);
-		txtTempoNivel.setY(20);
-		txtTempoNivel.setVisivel(true);
 
 		txtPontos = new TXTPaint(criaFonte(Font.PLAIN, 15),
 				new CadeiaCaracteres() {
@@ -122,8 +113,12 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 					}
 				});
 		txtPontos.setX(700);
-		txtPontos.setY(40);
+		txtPontos.setY(30);
 		txtPontos.setVisivel(true);
+	}
+
+	public int getFPS() {
+		return 60;
 	}
 
 	public void defEnqPintaveis() {
@@ -192,14 +187,13 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 		mg.setX(dadosNivel.xPersonagem);
 
 		mg.setX(dadosNivel.xPersonagem);
-		mg.setY(enquadramento.height - 34);
+		mg.setY(dadosNivel.yPersonagem);
 
 		personagem.iniciar();
 		arpao.iniciar();
 
-		estrela.setEmMov(emMov);
-		estrela.setEnquadramento(enquadramento);
 		bolas.clear();
+		estrelas.clear();
 		for (DadosBola dBola : dadosNivel.bolas) {
 			// BolaMov bola = Bola.criaBola(dBola.tipo).criaBolaMovivel();
 			BolaQJ bola = new BolaQJ(TipoBola.get(dBola.tipo));
@@ -212,15 +206,25 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 			bolas.add(bola);
 		}
 
+		for (DadosEstrela dEstrela : dadosNivel.estrelas) {
+			// BolaMov bola = Bola.criaBola(dBola.tipo).criaBolaMovivel();
+			Estrela estrela = new Estrela(dEstrela.tamanho);
+			estrela.setEmMov(emMov);
+			estrela.setEnquadramento(enquadramento);
+			estrela.setX(dEstrela.x);
+			estrela.setY(dEstrela.y);
+			estrelas.add(estrela);
+		}
+
 		lPintaveis.add(fundo);
 		lPintaveis.addAll(obstaculos);
 		lPintaveis.add(arpao);
 		lPintaveis.add(personagem);
 		lPintaveis.addAll(bolas);
+		lPintaveis.addAll(estrelas);
 		lPintaveis.add(txtVidas);
-		lPintaveis.add(txtTempoNivel);
+		lPintaveis.add(ampulheta);
 		lPintaveis.add(txtPontos);
-		lPintaveis.add(estrela);
 
 		for (Pintavel pintavel : lPintaveis) {
 			pintavel.setEnquadramento(enquadramento);
@@ -241,18 +245,18 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 						.clone();
 				lPintaveis.remove(indicadorNivel);
 				pintaveis = lPintaveis;
-				iniciarTemporizadorNivel();
+				iniciarTemporizadorNivel(60);
+				ampulheta.iniciar(60);
 			}
 		});
-
 		controlaveisPorTeclado = lControlaveisPorTeclado;
 		pintaveis = lPintaveis;
 		temporizador.start();
 		return true;
 	}
 
-	private void iniciarTemporizadorNivel() {
-		tempoNivel.setValor(60);
+	protected void iniciarTemporizadorNivel(int tempo) {
+		tempoNivel.setValor(tempo);
 
 		temporizar(tempoNivel, new Runnable() {
 			public void run() {
@@ -281,11 +285,32 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 		/**
 		 * Colisões
 		 */
+
+		for (Estrela estrela : estrelas) {
+			estrela.getColisao().reeniciar();
+		}
+
+		GestorIntercepcoes<Estrela> giEstrelas = new GestorIntercepcoes<Estrela>(
+				estrelas);
+
+		if (arpao.activo() && giEstrelas.interceptadoComCirculos(arpao)) {
+			arpao.iniciar();
+			rebentaEstrela((Estrela) giEstrelas.circuloInterceptado);
+			pontos += 2;
+		}
+
+		if (!personagem.ressucitar()
+				&& giEstrelas.interceptadoComCirculos(personagem)) {
+			morre();
+			if (vidas.getValor() > 0) {
+				rebentaEstrela((Estrela) giEstrelas.circuloInterceptado);
+			}
+		}
 		for (BolaQJ bola : bolas) {
 			bola.getColisao().reeniciar();
 		}
 		GestorIntercepcoes<BolaQJ> gi = new GestorIntercepcoes<BolaQJ>(bolas);
-		
+
 		gi.setRectangulos(obstaculos);
 		if (!personagem.ressucitar() && gi.interceptadoComCirculos(personagem)) {
 			morre();
@@ -299,7 +324,7 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 			rebentaBola((BolaQJ) gi.circuloInterceptado);
 			pontos += 2;
 		}
-		
+
 		// reeniciar colisoes
 
 		personagem.getColisao().reeniciar();
@@ -309,20 +334,56 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 		for (BolaQJ bola : bolas) {
 			bola.getColisao().reeniciar();
 		}
-		estrela.getColisao().reeniciar();
 		return true;
 
 	}
 
-	private void rebentaBola(BolaQJ bola) {
+	private void rebentaEstrela(Estrela estrela) {
+
+		ArrayList<Estrela> estrelasARemover = null;
+		ArrayList<Estrela> estrelasAAdicionar = null;
+
+		if (estrelasARemover == null) {
+			estrelasARemover = new ArrayList<>();
+		}
+		estrelasARemover.add(estrela);
+		int diametroAtual = estrela.getDiametro();
+		if (estrela.getDiametro() > 20) {
+			if (estrelasAAdicionar == null) {
+				estrelasAAdicionar = new ArrayList<>();
+			}
+			estrelasAAdicionar
+					.add(estrela.criaMenor(diametroAtual - 20, false));
+			estrelasAAdicionar.add(estrela.criaMenor(diametroAtual - 20, true));
+		}
+
+		if (estrelasARemover != null) {
+			for (Estrela estrelaARemover : estrelasARemover) {
+				estrelas.remove(estrelaARemover);
+				pintaveis.remove(estrelaARemover);
+
+			}
+		}
+		if (estrelasAAdicionar != null) {
+			for (Estrela estrelaAAdicionar : estrelasAAdicionar) {
+				estrelas.add(estrelaAAdicionar);
+				pintaveis.add(estrelaAAdicionar);
+			}
+		}
+		if (estrelas.isEmpty() && bolas.isEmpty())
+			fimNivel();
+	}
+
+	protected void rebentaBola(BolaQJ bola) {
 		bolas.remove(bola);
 		pintaveis.remove(bola);
-		if (!adicBolasRebentamento(bola) && bolas.isEmpty()) {
+		adicBolasRebentamento(bola);
+		if (bolas.isEmpty() && estrelas.isEmpty()) {
 			fimNivel();
 		}
 	}
 
-	private void temporizar(final Inteiro segundos, final Runnable evento) {
+	protected void temporizar(final Inteiro segundos, final Runnable evento) {
 		temporizador = new Timer(1000, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				segundos.inc(-1);
@@ -361,7 +422,7 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 		});
 	}
 
-	private void fimNivel() {
+	protected void fimNivel() {
 		pontos += tempoNivel.getValor() * 10;
 		tempoNivel.setValor(0);
 		if (temporizador != null) {
@@ -384,38 +445,19 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 		}
 	}
 
-	private boolean adicBolasRebentamento(BolaQJ bola) {
-		TipoBola tipoAnterior = bola.getTipoBola().anterior();
-		BolaQJ bolaAnterior;
-		if (tipoAnterior == null) {
-			return false;
+	protected void adicBolasRebentamento(BolaQJ bola) {
+		BolaQJ nova = bola.criaBolaAbaixo(false);
+		if (nova == null) {
+			return;
 		}
-		bolaAnterior = new BolaQJ(tipoAnterior);
-		BolaQJ bolaCriada = new BolaQJ(tipoAnterior);
-		bolaCriada.setX(bola.getX());
-		bolaCriada.setY(bola.getY());
-		bolaCriada.setVy(-bolaAnterior.getVyAR());
-		bolaCriada.setEnquadramento(enquadramento);
-		bolaCriada.setVx(-1);
-		bolaCriada.setEmMov(emMov);
-
-		bolas.add(bolaCriada);
-		pintaveis.add(bolaCriada);
-		// bola direita
-		bolaCriada = new BolaQJ(tipoAnterior);
-		bolaCriada.setX(bola.getX());
-		bolaCriada.setY(bola.getY());
-		bolaCriada.setVy(-bolaAnterior.getVyAR());
-		bolaCriada.setEnquadramento(enquadramento);
-		bolaCriada.setVx(1);
-		bolaCriada.setEmMov(emMov);
-
-		bolas.add(bolaCriada);
-		pintaveis.add(bolaCriada);
-		return true;
+		bolas.add(nova);
+		pintaveis.add(nova);
+		nova = bola.criaBolaAbaixo(true);
+		bolas.add(nova);
+		pintaveis.add(nova);
 	}
 
-	private void morre() {
+	protected void morre() {
 		personagem.atingido();
 		vidas.inc(-1);
 		if (vidas.getValor() == 0) {
@@ -439,17 +481,17 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 			public void run() {
 				continuarAnimacao.setValor(false);
 				String nome = null;
-				while (nome == null || nome.isEmpty()) {
-					nome = JOptionPane.showInputDialog("Introduz o nome");
-				}
-				BDTpontuacoes tPontuacoes = new BDTpontuacoes();
-				try {
-					tPontuacoes.inserirUtilizador(nome, pontos);
-				} catch (SQLException ex) {
-					JOptionPane.showMessageDialog(null, ex.getMessage(),
-							"Erro SQL", JOptionPane.ERROR_MESSAGE);
-				} finally {
-					tPontuacoes.fecha();
+				nome = JOptionPane.showInputDialog("Introduz o nome");
+				if (nome != null) {
+					BDTpontuacoes tPontuacoes = new BDTpontuacoes();
+					try {
+						tPontuacoes.inserirUtilizador(nome, pontos);
+					} catch (SQLException ex) {
+						JOptionPane.showMessageDialog(null, ex.getMessage(),
+								"Erro SQL", JOptionPane.ERROR_MESSAGE);
+					} finally {
+						tPontuacoes.fecha();
+					}
 				}
 			}
 		});
@@ -493,46 +535,69 @@ public class JogoArpao implements ProcessadorJogo, ControlavelPorTeclado {
 		/**
 		 * Limites
 		 */
-		
-		
+
 		for (Obstaculo obstaculo : obstaculos) {
 			GestorIntercepcoes.atualizaColisao(personagem, obstaculo);
-			if (personagem.getColisao().base) {
-				personagem.mg.setY(obstaculo.getY()-personagem.getAltura());
+			if (personagem.getColisao().base && personagem.mg.getVy() >= 0) {
+				personagem.mg.setY(obstaculo.getY() - personagem.getAltura());
 				personagem.mg.setVy(0);
-				Debugger.get().printf("%d \n",personagem.mg.getY());
+				personagem.setEmSalto(false);
 			}
 			if (personagem.getColisao().topo) {
-				personagem.mg.setY(obstaculo.getY()+obstaculo.getAltura()); 
+				personagem.mg.setY(obstaculo.getY() + obstaculo.getAltura());
+				personagem.mg.setVy(1);
 			}
 			if (personagem.getColisao().esquerda) {
-				personagem.mg.setX(obstaculo.getX()+obstaculo.getLargura()); 
+				personagem.mg.setX(obstaculo.getX() + obstaculo.getLargura());
 			}
 			if (personagem.getColisao().direita) {
-				personagem.mg.setX(obstaculo.getX()-personagem.getLargura()); 
+				personagem.mg.setX(obstaculo.getX() - personagem.getLargura());
 			}
 			personagem.getColisao().reeniciar();
-			
-			for (BolaQJ bola: bolas) {
+
+			for (BolaQJ bola : bolas) {
 				GestorIntercepcoes.atualizaColisao(bola, obstaculo);
-				Debugger.get().setDentro(true);
 				if (bola.getColisao().topo) {
-					bola.setVy(-25);
-					bola.setY(obstaculo.getY()-bola.getDiametro());
+					bola.setVy(-bola.getVy());
+					bola.setY(obstaculo.getY() + obstaculo.getAltura());
 					bola.getColisao().reeniciar();
 				}
 				if (bola.getColisao().base) {
 					bola.setVy(-bola.getVy());
-					bola.setY(obstaculo.getY()+obstaculo.getAltura());
+					bola.setY(obstaculo.getY() - bola.getDiametro());
 					bola.getColisao().reeniciar();
 				}
 			}
 		}
 
 		criaLimitesDeColisao(personagem);
+
 		for (BolaQJ bola : bolas) {
 			criaLimitesDeColisao(bola);
+			if (bola.getColisao().base) {
+				bola.decvyAC();
+			}
 		}
-		criaLimitesDeColisao(estrela);
+
+		for (Obstaculo obstaculo : obstaculos) {
+			for (Estrela estrela : estrelas) {
+				GestorIntercepcoes.atualizaColisao(estrela, obstaculo);
+			}
+			if (arpao.activo()) {
+				GestorIntercepcoes.atualizaColisao(arpao, obstaculo);
+
+				// ignorar colisao na base do arpao em contacto com um obctaculo
+				arpao.getColisao().base = false;
+				if (arpao.getColisao().tem()) {
+					arpao.iniciar();
+					arpao.getColisao().reeniciar();
+				}
+			}
+		}
+
+		for (Estrela estrela : estrelas) {
+			criaLimitesDeColisao(estrela);
+		}
 	}
+
 }

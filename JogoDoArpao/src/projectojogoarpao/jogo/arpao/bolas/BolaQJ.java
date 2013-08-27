@@ -30,6 +30,12 @@ public class BolaQJ extends BolaPintavel implements Movivel {
 		mg.setYmax(0);
 	}
 
+	public void decvyAC(){
+		if (vyAC>=0) {
+			vyAC--;
+		}
+	}
+	
 	public Colisao getColisao() {
 		if (colisao == null) {
 			colisao = new Colisao();
@@ -117,5 +123,22 @@ public class BolaQJ extends BolaPintavel implements Movivel {
 
 	public int getY() {
 		return mg.getY();
+	}
+
+	public BolaQJ criaBolaAbaixo(boolean inverteX) {
+		TipoBola tipoAnterior = this.getTipoBola().anterior();
+		if (tipoAnterior == null) {
+			return null;
+		}
+		BolaQJ nova = new BolaQJ(tipoAnterior);
+		nova.setX(getX());
+		nova.setY(getY());
+		//após a colisão terá esta aceleração constante para o
+		//topo do ecrã
+		nova.setVy(-this.getVyAR());
+		nova.setEnquadramento(enquadramento);
+		nova.setVx(inverteX?-1:1);
+		nova.setEmMov(emMov);
+		return nova;
 	}
 }

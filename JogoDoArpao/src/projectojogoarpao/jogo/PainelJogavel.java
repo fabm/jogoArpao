@@ -4,6 +4,7 @@
  */
 package projectojogoarpao.jogo;
 
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
@@ -16,38 +17,49 @@ import java.util.Collection;
 import javax.swing.JComponent;
 import javax.swing.Timer;
 
+import projectojogoarpao.jogo.arpao.JogoArpao;
+
 /**
  *
  * @author francisco
  */
 @SuppressWarnings("serial")
-public abstract class PainelJogavel extends JComponent implements
+public class PainelJogavel extends JComponent implements
         ActionListener, KeyListener {
     
-    Timer timer;
+	private JogoArpao jogoArpao;
+    private Timer timer;
     
+    public PainelJogavel(JogoArpao jogoArpao){
+        super();
+        setPreferredSize(new Dimension(800, 600));
+        this.jogoArpao = jogoArpao;
+        iniciarQuadro();    	
+    }
     public PainelJogavel() {
         super();
+        setPreferredSize(new Dimension(800, 600));
+        jogoArpao = new JogoArpao();
         iniciarQuadro();
     }
     
-    protected abstract ProcessadorJogo getProcessadorJogo();
-    
-    protected abstract int getFreq();
-    
+    protected ProcessadorJogo getProcessadorJogo(){
+    	return jogoArpao;
+    }
+        
     private void iniciarQuadro(){
         addKeyListener(this);
         setFocusable(true);
         setDoubleBuffered(true);
         //Periodo em milisegundos = 1000/freq
-        timer = new Timer(1000 / getFreq(), this);        
+        timer = new Timer(1000 / jogoArpao.getFPS(), this);        
     }
     
     protected void iniciarAnimacao() {
         timer.start();
     }
     
-    protected void pararAnimacao() {
+    public void pararAnimacao() {
         timer.stop();
     }
     
@@ -114,4 +126,13 @@ public abstract class PainelJogavel extends JComponent implements
         Toolkit.getDefaultToolkit().sync();
         g.dispose();
     }
+
+	public void novoJogo() {
+		iniciarAnimacao();
+		jogoArpao.iniciarJogo();
+	}
+	
+	public void fimJogo(){
+		pararAnimacao();
+	}
 }

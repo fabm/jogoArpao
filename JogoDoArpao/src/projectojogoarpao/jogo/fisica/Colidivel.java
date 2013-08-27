@@ -1,5 +1,8 @@
 package projectojogoarpao.jogo.fisica;
 
 public interface Colidivel {
-	Colisao getColisao();
+	int getX();
+	int getY();
+	public Colisao getColisao();
+
 }

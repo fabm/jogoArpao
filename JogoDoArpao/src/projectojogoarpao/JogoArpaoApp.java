@@ -1,6 +1,5 @@
 package projectojogoarpao;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -8,15 +7,11 @@ import java.awt.event.KeyEvent;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-import projectojogoarpao.jogo.arpao.PainelJogoArpao;
+import projectojogoarpao.jogo.PainelJogavel;
 import projectojogoarpao.jogo.arpao.editor.PainelEdicao;
-
-
 
 @SuppressWarnings("serial")
 public class JogoArpaoApp extends javax.swing.JFrame implements ActionListener {
-
-
 
 	private enum Estado{
         principal,edicao,novo
@@ -24,13 +19,12 @@ public class JogoArpaoApp extends javax.swing.JFrame implements ActionListener {
     public static void main(String args[]) {
         new JogoArpaoApp().setVisible(true);
     }
-    private javax.swing.JMenu jMenuAjuda;
     private javax.swing.JMenuBar jMenuBar;
     private javax.swing.JMenuItem jMenuItemNovo;
     private javax.swing.JMenuItem jMenuItemSair;
     private javax.swing.JMenuItem jMenuItemEditar;
     private javax.swing.JMenu jMenuJogo;
-    private PainelJogoArpao pJogoArpao;
+    private PainelJogavel pJogoArpao;
     private Estado estadoActual;
     
     public JogoArpaoApp() {
@@ -41,20 +35,17 @@ public class JogoArpaoApp extends javax.swing.JFrame implements ActionListener {
 
     private void initComponents() {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
         jMenuBar = new javax.swing.JMenuBar();
         jMenuJogo = new javax.swing.JMenu();
         jMenuItemNovo = new javax.swing.JMenuItem();
         jMenuItemSair = new javax.swing.JMenuItem();
         jMenuItemEditar = new javax.swing.JMenuItem();
-        jMenuAjuda = new javax.swing.JMenu();
-        pJogoArpao = new PainelJogoArpao();
+        pJogoArpao = new PainelJogavel();
 
         jMenuJogo.setText("Jogo");
         jMenuItemNovo.setText("Novo");
         jMenuItemEditar.setText("Editar");
         jMenuItemSair.setText("Sair");
-        jMenuAjuda.setText("Ajuda");
 
         jMenuJogo.setMnemonic(KeyEvent.VK_ALT);
         
@@ -62,16 +53,17 @@ public class JogoArpaoApp extends javax.swing.JFrame implements ActionListener {
         jMenuJogo.add(jMenuItemNovo);
         jMenuJogo.add(jMenuItemEditar);
         jMenuJogo.add(jMenuItemSair);
-        jMenuBar.add(jMenuAjuda);
         setJMenuBar(jMenuBar);
 
         jMenuItemNovo.addActionListener(this);
         jMenuItemSair.addActionListener(this);
         jMenuItemEditar.addActionListener(this);
         JPanel panel = new JPanel();
-        panel.setPreferredSize(new Dimension(800, 600));
+        //panel.setPreferredSize(new Dimension(800, 600));
+        panel.add(new EcraPrincipal());
         setContentPane(panel);
         pack();
+       // setResizable(false);
     }
 
     
@@ -91,9 +83,10 @@ public class JogoArpaoApp extends javax.swing.JFrame implements ActionListener {
             	pack();
                 return;
             }
-            
+            pJogoArpao.fimJogo();
             setContentPane(new PainelEdicao());
             estadoActual = Estado.edicao;
+            pack();
             return;
         }
         if (e.getSource() == jMenuItemSair) {

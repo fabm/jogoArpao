@@ -11,6 +11,4 @@ package projectojogoarpao.jogo.fisica;
 public interface Rectangulo extends Colidivel{
     public int getLargura();
     public int getAltura();
-    public int getX();
-    public int getY();
 }

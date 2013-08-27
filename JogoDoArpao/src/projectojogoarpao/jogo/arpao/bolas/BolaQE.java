@@ -40,7 +40,19 @@ public class BolaQE extends BolaPintavel implements Arrastavel{
 	public void arrasta(int x, int y) {
 		int xbola = x - centro.x;
 		int ybola = y - centro.y;
-		if (arrasta) {
+		
+		boolean valido = true;;
+		if(xbola+getDiametro()>enquadramento.width)
+			valido = false;
+		if(ybola+getDiametro()>enquadramento.height)
+			valido = false;
+		if(xbola<0)
+			valido = false;
+		if(ybola<0)
+			valido = false;
+
+		
+		if (arrasta && valido) {
 			setXY(xbola, ybola);
 		}
 	}
@@ -49,7 +61,7 @@ public class BolaQE extends BolaPintavel implements Arrastavel{
 		if (GestorIntercepcoes.pontoDentro(this, x, y)) {
 			arrasta = true;
 			centro.x = x - mv.getX();
-			centro.y = y - mv.getX();
+			centro.y = y - mv.getY();
 		} else {
 			arrasta = false;
 		}

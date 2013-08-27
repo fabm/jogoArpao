@@ -13,6 +13,8 @@ import java.util.ArrayList;
 public class DadosNivel {
     public String fundo;
     public int xPersonagem;
+	public int yPersonagem;
     public ArrayList<DadosBola> bolas = new ArrayList<DadosBola>();
+    public ArrayList<DadosEstrela> estrelas = new ArrayList<DadosEstrela>();
     public int num;
 }

@@ -10,16 +10,17 @@ import javax.swing.JDialog;
 
 import projectojogoarpao.jogo.PainelJogavel;
 import projectojogoarpao.jogo.ProcessadorJogo;
+import testes.JogoArpaoTestes;
 
 @SuppressWarnings("serial")
 public class PainelJogoArpao extends PainelJogavel {
-
-    private JDialog dialogoEdicao;
+/*
+    //private JDialog dialogoEdicao;
     private JogoArpao jogoArpao;
-
+    
     public PainelJogoArpao() {
         super();
-        jogoArpao = new JogoArpao();
+        jogoArpao = new JogoArpaoTestes();
         setPreferredSize(new Dimension(800, 600));
     }
 
@@ -29,7 +30,7 @@ public class PainelJogoArpao extends PainelJogavel {
     }
 
     public void editar() {
-        dialogoEdicao.setVisible(true);
+        //dialogoEdicao.setVisible(true);
     }
 
     @Override
@@ -37,9 +38,8 @@ public class PainelJogoArpao extends PainelJogavel {
         return jogoArpao;
     }
 
-    @Override
     protected int getFreq() {
         return 60;
     }
-
+*/
 }

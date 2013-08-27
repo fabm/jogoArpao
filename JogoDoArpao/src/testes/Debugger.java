@@ -4,6 +4,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.ImageObserver;
 
+import projectojogoarpao.jogo.arpao.Obstaculo;
+import projectojogoarpao.jogo.arpao.estrelas.Estrela;
+import projectojogoarpao.jogo.fisica.Circulo;
 import projectojogoarpao.jogo.fisica.Rectangulo;
 import projectojogoarpao.jogo.fisica.movimentos.MovimentoGravitico;
 
@@ -26,6 +29,14 @@ public class Debugger {
 		System.out.printf("ry:%d cy:%d ry2:%d cy2:%d\n", rY, cY, rY2, cY2);
 	}
 
+	public void debugEstrelaEobstaculo(Object estrela, Object obstaculo){
+		if (dentro) {
+			Estrela e = (Estrela) estrela;
+			Obstaculo o = (Obstaculo) obstaculo;
+			printf("ex:%d ey:%d ex1:%d ey1:%d\n",e.getX(),e.getY(),e.getX()+e.getDiametro(),e.getY()+e.getDiametro());
+			printf("ox:%d oy:%d ox1:%d oy1:%d\n",o.getX(),o.getY(),o.getX()+o.getLargura(),o.getY()+o.getAltura());
+		}
+	}
 	public void track() throws Throwable {
 		throw new Throwable("tracking");
 	}
@@ -85,5 +96,22 @@ public class Debugger {
 
 	public void setDentro(boolean dentro) {
 		this.dentro = dentro;
+	}
+
+	public void debugColisao(Circulo circulo, Rectangulo rectangulo) {
+		int rX = rectangulo.getX();
+		int rX2 = rX + rectangulo.getLargura();
+		int rY = rectangulo.getY();
+		int rY2 = rY + rectangulo.getAltura();
+		int cR = circulo.getDiametro() / 2;
+		int cX = circulo.getX();
+		int cXM = cX + cR;
+		int cX2 = cX + circulo.getDiametro();
+		int cY = circulo.getY();
+		int cYM = cY + cR;
+		int cY2 = cY + circulo.getDiametro();
+		
+		printf("rx:%d rx2:%d ry:%d ry2:%d\n",rX,rX2,rY,rY2);
+		printf("cx:%d cx2:%d cy:%d cy2:%d cxm%d cym%d\n",cX,cX2,cY,cY2,cXM,cYM);
 	}
 }
